@@ -1,0 +1,54 @@
+{
+  "prompts": [{
+    "type": "input",
+    "name": "version",
+    "message": "Which version do you want to install?",
+    "default": "v1.2.0-rc.2"
+  }],
+  "bower": {
+    "dependencies": {
+      "angular-lastest": "{{= version}}"
+    }
+  },
+  "grunt": {
+    "copy": {
+      "bowerAngularLatest": {
+        "files": [{
+          "expand": true,
+          "cwd": "<%= config.dir.bower.root %>/angular-lastest/",
+          "src": ["modernizr.js"],
+          "dest": "<%= config.dir.public.scripts %>/vendors/angular-lastest/"
+        }]
+      }
+    },
+    "parallel": {
+      "options": {
+        "grunt": true
+      },
+      "bowerBuild": {
+        "tasks": [
+          ["shell:angularLatestNpm", "shell:angularLatestPackage"],
+        ]
+      },
+      "bowerCopy": {
+        "tasks": [
+          "copy:bowerAngularLatest"
+        ]
+      }
+    },
+    "shell": {
+      "angularLatestNpm": {
+        "command": "(cd ./<%= config.dir.bower.root %>/angular-latest && exec npm install)",
+        "options": {
+          "stdout": true
+        }
+      },
+      "angularLatestPackage": {
+        "command": "(cd ./<%= config.dir.bower.root %>/angular-latest && exec grunt clean buildall minall)",
+        "options": {
+          "stdout": true
+        }
+      }
+    }
+  }
+}

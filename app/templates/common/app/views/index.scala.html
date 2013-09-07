@@ -1,0 +1,11 @@
+@()
+
+@templates.main() {
+    
+  <h1><%= app.name %></h1>
+  <p>
+    Read local documentation <a href="/@documentation/Home">here</a>.
+    Read <%= app.language %> API <a href="/@documentation/api/<%= app.language %>/index.html">here</a>.
+  </p>
+    
+}

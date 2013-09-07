@@ -1,0 +1,15 @@
+{
+  "prompts": [{
+    "type": "input",
+    "name": "version",
+    "message": "What is your new version?"
+  }],
+  "constants": {
+    "application": {
+      "version": "{{= version }}"
+    }
+  },
+  "package": {
+    "version": "{{= version }}"
+  }
+}

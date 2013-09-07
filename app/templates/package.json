@@ -1,0 +1,5 @@
+{
+  "name": "<%= config.app.name %>",
+  "version": "<%= config.app.version %>",
+  "dependencies": {}
+}
