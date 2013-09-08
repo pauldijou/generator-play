@@ -60,10 +60,12 @@ var PlayBase = module.exports =  function PlayBase(args, options) {
   this.log.writeln(playStyle("| |_) | | (_| | |_| |_| ") + generatorStyle("| (_| |  __/ | | |  __/ | | (_| | || (_) | |   "));
   this.log.writeln(playStyle("| .__/|_|\\__,_|\\__, (_)") + generatorStyle("  \\__, |\\___|_| |_|\\___|_|  \\__,_|\\__\\___/|_|   "));
   this.log.writeln(playStyle("| |             __/ |    ") + generatorStyle(" __/ |                                        "));
-  this.log.writeln(playStyle("|_|            |___/     ") + generatorStyle("|___/                                         ")); 
+  this.log.writeln(playStyle("|_|            |___/     ") + generatorStyle("|___/                                         "));
+  this.log.writeln();
 
   this.on('end', function () {
     this.writeConfig();
+    this.log.writeln();
   });
 
 };
@@ -153,6 +155,33 @@ yeoman.generators.Base.prototype.appendLine = function (contentString, newLine) 
   return contentString + "\n" + newLine;
 };
 
+yeoman.generators.Base.prototype.recursiveApply = function (obj, fn, clone) {
+  if (clone) {
+    obj = _.clone(obj);
+  }
+
+  _.forEach(obj, function (value, key) {
+    if (_.isArray(value)) {
+      obj[key] = _.map(value, fn);
+    } else if(_.isObject(value)) {
+      this.recursiveApply(value, fn, clone);
+    } else {
+      obj[key] = fn(value);
+    }
+  }.bind(this));
+
+  return obj;
+};
+
+yeoman.generators.Base.prototype.recursiveEngine = function (engine, obj, data) {
+  return this.recursiveApply(obj, function (value) {
+    if (_.isString(value)) {
+      return engine(value, data);
+    } else {
+      return value;
+    }
+  }.bind(this));
+};
 
 yeoman.generators.Base.prototype.mustacheEngine = function (text, data) {
   return _.template(text, data, {
@@ -162,12 +191,20 @@ yeoman.generators.Base.prototype.mustacheEngine = function (text, data) {
   });
 };
 
+yeoman.generators.Base.prototype.recursiveMustacheEngine = function (obj, data) {
+  return this.recursiveEngine(this.mustacheEngine, obj, data);
+};
+
 yeoman.generators.Base.prototype.underscoreEngine = function (text, data) {
   return _.template(text, data, {
     escape: /_-([\s\S]+?)_/g,
     evaluate: /_([\s\S]+?)_/g,
     interpolate: /_=([\s\S]+?)_/g
   });
+};
+
+yeoman.generators.Base.prototype.recursiveUnderscoreEngine = function (obj, data) {
+  return this.recursiveEngine(this.underscoreEngine, obj, data);
 };
 
 // Time to extend!

@@ -7,7 +7,7 @@ var PlayBase = require('../utils/play-base');
 var SnippetGenerator = module.exports = function SnippetGenerator(args, options, config) {
   PlayBase.apply(this, arguments);
 
-  this.argument("command", {
+  this.argument("snippetName", {
     required: true,
     optional: false,
     type: "String"
@@ -20,23 +20,22 @@ var SnippetGenerator = module.exports = function SnippetGenerator(args, options,
 
 util.inherits(SnippetGenerator, PlayBase);
 
-SnippetGenerator.prototype.askForTemplate = function () {
-  var templatePath = this.options.path ? this.options.path + "/" + this.command + ".json" : this.sourceRoot() + "/" + this.command + ".json";
+SnippetGenerator.prototype.askForSnippet = function () {
+  var snippetPath = this.options.path ? this.options.path + "/" + this.snippetName : this.sourceRoot() + "/" + this.snippetName;
+  this.snippet = require(snippetPath);
 
-  if (!this.existsFile(templatePath)) {
-    console.log("No template at ", templatePath);
+  if (!this.snippet) {
+    console.log("No snippet at ", snippetPath);
   } else {
-    this.templateJson = this.readFileAsJson(templatePath);
-
-    if (this.templateJson && this.templateJson.prompts) {
+    if (this.snippet.prompts) {
       var cb = this.async();
 
-      this.prompt(this.templateJson.prompts, function (props, err) {
+      this.prompt(this.snippet.prompts, function (props, err) {
         if (err) {
           return this.emit('error', err);
         }
 
-        this.templateJson = JSON.parse(this.mustacheEngine(this.readFileAsString(templatePath), props));
+        this.snippet = this.recursiveMustacheEngine(this.snippet, props);
 
         cb();
       }.bind(this));
@@ -44,8 +43,8 @@ SnippetGenerator.prototype.askForTemplate = function () {
   }
 };
 
-SnippetGenerator.prototype.writeTemplate = function () {
-  if (this.templateJson) {
+SnippetGenerator.prototype.writesnippet = function () {
+  if (this.snippet) {
     var packagePath = this.paths.root + "/package.json";
     var bowerPath = this.paths.root + "/bower.json";
     var gruntPath = this.paths.root + "/Gruntfile.js";
@@ -55,7 +54,7 @@ SnippetGenerator.prototype.writeTemplate = function () {
     this._updateJson(bowerPath, "bower");
     this._updateJson(constantsPath, "constants");
 
-    if (this.templateJson.grunt && this.existsFile(gruntPath)) {
+    if (this.snippet.grunt && this.existsFile(gruntPath)) {
       var gruntfile = this.readFileAsString(gruntPath);
 
       var startToken = "initConfig(";
@@ -76,7 +75,7 @@ SnippetGenerator.prototype.writeTemplate = function () {
 
       var gruntConfigObject;
       eval("gruntConfigObject = " + gruntConfig);
-      gruntConfigObject = this._merge(gruntConfigObject, this.templateJson.grunt);
+      gruntConfigObject = this._merge(gruntConfigObject, this.snippet.grunt);
 
       gruntConfig = JSON.stringify(gruntConfigObject, null, "  ");
 
@@ -98,9 +97,9 @@ SnippetGenerator.prototype._merge = function (source1, source2) {
 };
 
 SnippetGenerator.prototype._updateJson = function (path, property) {
-  if (this.templateJson[property] && this.existsFile(path)) {
+  if (this.snippet[property] && this.existsFile(path)) {
     var data = this.readFileAsJson(path);
-    data = this._merge(data, this.templateJson[property]);
+    data = this._merge(data, this.snippet[property]);
     this.writeFileFromJson(path, data);
   }
 };

@@ -1,5 +1,0 @@
-package models
-
-trait BsonModel {
-
-}
