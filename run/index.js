@@ -20,8 +20,8 @@ var RunGenerator = module.exports = function RunGenerator(args, options, config)
 
 util.inherits(RunGenerator, PlayBase);
 
-RunGenerator.prototype.askFortemplate = function () {
-  var templatePath = this.options.path ? this.options.path + this.command + ".json" : this.sourceRoot() + "/" + this.command + ".json";
+RunGenerator.prototype.askForTemplate = function () {
+  var templatePath = this.options.path ? this.options.path + "/" + this.command + ".json" : this.sourceRoot() + "/" + this.command + ".json";
 
   if (!this.existsFile(templatePath)) {
     console.log("No template at ", templatePath);
@@ -38,7 +38,6 @@ RunGenerator.prototype.askFortemplate = function () {
         }
 
         this.templateJson = JSON.parse(this.safeEngine(this.readFileAsString(templatePath), props));
-        console.log(this.templateJson);
 
         cb();
       }.bind(this));
@@ -46,7 +45,7 @@ RunGenerator.prototype.askFortemplate = function () {
   }
 };
 
-RunGenerator.prototype.writetemplate = function () {
+RunGenerator.prototype.writeTemplate = function () {
   if (this.templateJson) {
     var packagePath = this.paths.root + "/package.json";
     var bowerPath = this.paths.root + "/bower.json";
@@ -65,12 +64,30 @@ RunGenerator.prototype.writetemplate = function () {
       var startConfig = gruntfile.indexOf(startToken) + startToken.length;
       var endConfig = gruntfile.indexOf(endToken, startConfig);
 
-      var gruntConfigObject, configuration = "CONFIGURATION";
-      eval("gruntConfigObject = " + gruntfile.substring(startConfig, endConfig));
+      var gruntConfig = gruntfile.substring(startConfig, endConfig);
+
+      // Preserve all JavaScript variables inside the Gruntfile
+      var variables = ["configuration"];
+      var variablesMapping = {};
+      _.forEach(variables, function (variable) {
+        var stringVariable = "@{" + variable + "}";
+        variablesMapping[variable] = stringVariable;
+        console.log("replace", variable, "variablesMapping[\"" + variable + "\"]");
+        gruntConfig = gruntConfig.replace(variable, "variablesMapping." + variable);
+      });
+
+      var gruntConfigObject;
+      eval("gruntConfigObject = " + gruntConfig);
       gruntConfigObject = this._merge(gruntConfigObject, this.templateJson.grunt);
 
-      gruntfile = gruntfile.substring(0, startConfig) + JSON.stringify(gruntConfigObject, null, "  ") + gruntfile.substring(endConfig);
-      console.log(gruntfile);
+      gruntConfig = JSON.stringify(gruntConfigObject, null, "  ");
+
+      _.forEach(variablesMapping, function (stringVariable, variable) {
+        gruntConfig = gruntConfig.replace("\"" + stringVariable + "\"", variable);
+      });
+
+      gruntfile = gruntfile.substring(0, startConfig) + gruntConfig + gruntfile.substring(endConfig);
+
       this.writeFileFromString(gruntfile, "Gruntfile.js");
     }
   }
