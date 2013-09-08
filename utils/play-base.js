@@ -3,6 +3,7 @@ var util = require('util');
 var path = require('path');
 var fs = require('fs');
 var _ = require('lodash');
+var chalk = require('chalk');
 var yeoman = require('yeoman-generator');
 
 var CONFIG_FILE = "generator-play.json";
@@ -14,7 +15,7 @@ var DEFAULT_CONFIG = {
   app: {
     name: '',
     version: '0.0.1-SNAPSHOT',
-    playVersion: '2.1.2',
+    playVersion: '2.1.3',
     language: '',
     secret: '',
     langs: [],
@@ -31,13 +32,13 @@ var PlayBase = module.exports =  function PlayBase(args, options) {
   
   // Set paths
   this.paths = {
-    root: PATH_ROOT,
-    app: path.join(PATH_ROOT, '/app'),
-    conf: path.join(PATH_ROOT, '/conf'),
-    public: path.join(PATH_ROOT, '/public'),
-    resources: path.join(PATH_ROOT, '/resources'),
-    project: path.join(PATH_ROOT, '/project'),
-    test: path.join(PATH_ROOT, '/test')
+    "root": PATH_ROOT,
+    "app": path.join(PATH_ROOT, '/app'),
+    "conf": path.join(PATH_ROOT, '/conf'),
+    "public": path.join(PATH_ROOT, '/public'),
+    "resources": path.join(PATH_ROOT, '/resources'),
+    "project": path.join(PATH_ROOT, '/project'),
+    "test": path.join(PATH_ROOT, '/test')
   };
 
   // Extend the Yeoman Generator Base
@@ -49,6 +50,17 @@ var PlayBase = module.exports =  function PlayBase(args, options) {
       return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
     }
   });
+
+  var playStyle = chalk.green;
+  var generatorStyle = chalk.cyan;
+  this.log.writeln(playStyle("       _             _   ") + generatorStyle("                                _             "));
+  this.log.writeln(playStyle("      | |           | |  ") + generatorStyle("                               | |            "));
+  this.log.writeln(playStyle(" _ __ | | __ _ _   _| |  ") + generatorStyle(" __ _  ___ _ __   ___ _ __ __ _| |_ ___  _ __ "));
+  this.log.writeln(playStyle("| '_ \\| |/ _` | | | | | ") + generatorStyle(" / _` |/ _ \\ '_ \\ / _ \\ '__/ _` | __/ _ \\| '__|"));
+  this.log.writeln(playStyle("| |_) | | (_| | |_| |_| ") + generatorStyle("| (_| |  __/ | | |  __/ | | (_| | || (_) | |   "));
+  this.log.writeln(playStyle("| .__/|_|\\__,_|\\__, (_)") + generatorStyle("  \\__, |\\___|_| |_|\\___|_|  \\__,_|\\__\\___/|_|   "));
+  this.log.writeln(playStyle("| |             __/ |    ") + generatorStyle(" __/ |                                        "));
+  this.log.writeln(playStyle("|_|            |___/     ") + generatorStyle("|___/                                         ")); 
 
   this.on('end', function () {
     this.writeConfig();
