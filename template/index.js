@@ -6,20 +6,30 @@ var path = require('path');
 var yeoman = require('yeoman-generator');
 var PlayBase = require('../utils/play-base');
 
-var PRIVATE_PREFIX = "__";
-
 var TemplateGenerator = module.exports = function TemplateGenerator(args, options, config) {
   PlayBase.apply(this, arguments);
+  
+  this.argument("templateName", {
+    "type": String,
+    "required": false,
+    "optional": true
+  });
 
-  this.argument("templateName", {});
+  this.option("path", {
+    "type": String,
+    "default": true
+  });
 
-  this.option("path", {});
+  this.option("config", {
+    "type": String,
+    "default": "config.json"
+  });
 };
 
 util.inherits(TemplateGenerator, PlayBase);
 
 TemplateGenerator.prototype.findPath = function () {
-  var self = this;
+  this.options.config = this.options.config || "config.json";
 
   if (this.options.path && !this.templateName) {
     this.config.template = this.config.template || {};
@@ -31,44 +41,44 @@ TemplateGenerator.prototype.findPath = function () {
     paths.push( this.sourceRoot() );
 
     this.templatePaths = _.map(paths, function (templatePath) {
-        return path.join(templatePath, self.templateName);
-      }
+        return path.join(templatePath, this.templateName);
+      }.bind(this)
     );
 
     _.forEach(this.templatePaths, function (templatePath) {
-      if (!self.templatePath && self.existsFile(templatePath)) {
-        self.templatePath = templatePath;
+      if (!this.templatePath && this.existsFile(templatePath)) {
+        this.templatePath = templatePath;
       }
-    });
+    }.bind(this));
   }
 };
 
 TemplateGenerator.prototype.configJson = function () {
   if (this.templatePath) {
-    this.templateJson = this.readFileAsJson(path.join(this.templatePath, PRIVATE_PREFIX + "config.json"), {});
+    this.config = this.readFileAsJson(path.join(this.templatePath, this.options.config), {});
   }
 };
 
 TemplateGenerator.prototype.welcome = function () {
-  if (this.templateJson && this.templateJson.welcome) {
-    _.forEach(this.templateJson.welcome, function (w) {
+  if (this.config && this.config.welcome) {
+    _.forEach(this.config.welcome, function (w) {
       this._log(w.status, w.message);
     }.bind(this))
   }
 };
 
 TemplateGenerator.prototype.ask = function () {
-  if (this.templateJson && this.templateJson.prompts) {
+  if (this.config && this.config.prompts) {
     var cb = this.async();
 
-    this.templateProps = {};
+    this.properties = {};
 
-    this.prompt(this.templateJson.prompts, function (props, err) {
+    this.prompt(this.config.prompts, function (props, err) {
       if (err) {
         return this.emit('error', err);
       }
 
-      this.templateProps = props;
+      this.properties = props;
       this.log.write();
 
       cb();
@@ -83,30 +93,35 @@ TemplateGenerator.prototype.writeFiles = function () {
 };
 
 TemplateGenerator.prototype.bye = function () {
-  if (this.templateJson && this.templateJson.bye) {
-    _.forEach(this.templateJson.bye, function (w) {
+  if (this.config && this.config.bye) {
+    _.forEach(this.config.bye, function (w) {
       this._log(w.status, w.message);
     }.bind(this))
   }
 };
 
 TemplateGenerator.prototype._writeDir = function (currentPath) {
-  var self = this;
   var files = fs.readdirSync(currentPath);
   _(files)
-    .reject(function (file) {
-      return file.indexOf(PRIVATE_PREFIX) === 0;
+    .map(function (file) {
+      return path.join(currentPath, file);
     })
-    .forEach(function (file) {
-      var filePath = path.join(currentPath, file);
+    .reject(function (filePath) {
+      var relativeFilePath = filePath.substr(this.templatePath.length + 1);
+      return this.config.files
+        && this.config.files[relativeFilePath]
+        && this.config.files[relativeFilePath].excluded
+        && eval(this.config.files[relativeFilePath].excluded);
+    }.bind(this))
+    .forEach(function (filePath) {
       var stat = fs.statSync(filePath);
-      stat.isDirectory() ? self._writeDir(filePath) : self._writeFile(filePath);
-    }); 
+      stat.isDirectory() ? this._writeDir(filePath) : this._writeFile(filePath);
+    }.bind(this)); 
 };
 
 TemplateGenerator.prototype._writeFile = function (filePath) {
-  var destinationPath = this.underscoreEngine(filePath, this.templateProps).replace(this.templatePath, this.paths.root);
-  this.template(filePath, destinationPath, this.templateProps);
+  var destinationPath = this.underscoreEngine(filePath, this.properties).replace(this.templatePath, this.paths.root);
+  this.template(filePath, destinationPath, this.properties);
 };
 
 TemplateGenerator.prototype._log = function (status, message) {

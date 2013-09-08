@@ -19,5 +19,10 @@
     "message": "Thanks you for using me!"
   },{
     "status": "write"
-  }]
+  }],
+  "files": {
+    "config.json": {
+      "excluded": true
+    }
+  }
 }
