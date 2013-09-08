@@ -4,7 +4,7 @@ var _ = require('lodash');
 var yeoman = require('yeoman-generator');
 var PlayBase = require('../utils/play-base');
 
-var RunGenerator = module.exports = function RunGenerator(args, options, config) {
+var SnippetGenerator = module.exports = function SnippetGenerator(args, options, config) {
   PlayBase.apply(this, arguments);
 
   this.argument("command", {
@@ -18,9 +18,9 @@ var RunGenerator = module.exports = function RunGenerator(args, options, config)
   });
 };
 
-util.inherits(RunGenerator, PlayBase);
+util.inherits(SnippetGenerator, PlayBase);
 
-RunGenerator.prototype.askForTemplate = function () {
+SnippetGenerator.prototype.askForTemplate = function () {
   var templatePath = this.options.path ? this.options.path + "/" + this.command + ".json" : this.sourceRoot() + "/" + this.command + ".json";
 
   if (!this.existsFile(templatePath)) {
@@ -45,7 +45,7 @@ RunGenerator.prototype.askForTemplate = function () {
   }
 };
 
-RunGenerator.prototype.writeTemplate = function () {
+SnippetGenerator.prototype.writeTemplate = function () {
   if (this.templateJson) {
     var packagePath = this.paths.root + "/package.json";
     var bowerPath = this.paths.root + "/bower.json";
@@ -93,13 +93,13 @@ RunGenerator.prototype.writeTemplate = function () {
   }
 };
 
-RunGenerator.prototype._merge = function (source1, source2) {
+SnippetGenerator.prototype._merge = function (source1, source2) {
   return _.merge(source1, source2, function (a, b) {
     return _.isArray(a) ? a.concat(b) : undefined;
   });
 };
 
-RunGenerator.prototype._updateJson = function (path, property) {
+SnippetGenerator.prototype._updateJson = function (path, property) {
   if (this.templateJson[property] && this.existsFile(path)) {
     var data = this.readFileAsJson(path);
     data = this._merge(data, this.templateJson[property]);
