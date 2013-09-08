@@ -34,7 +34,7 @@ GruntGenerator.prototype.gruntfile = function () {
     this.config.grunt = props;
 
     var gruntfile = this.readFileAsString(this.sourceRoot() + "/Gruntfile.js");
-    gruntfile = this.safeEngine(gruntfile, this.config);
+    gruntfile = this.mustacheEngine(gruntfile, this.config);
     this.writeFileFromString(gruntfile, "Gruntfile.js");
 
     cb();

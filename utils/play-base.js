@@ -41,13 +41,16 @@ var PlayBase = module.exports =  function PlayBase(args, options) {
   };
 
   // Extend the Yeoman Generator Base
-  this.pkg = this.readFileAsJson(path.join(this.paths.root, '/package.json'));
+  this.pkg = this.readFileAsJson(path.join(this.paths.root, '/package.json'), {});
   this.config = this.readConfig();
 
-  console.log("paths", __dirname, this.paths.root);
+  _.mixin({
+    capitalize: function (string) {
+      return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    }
+  });
 
   this.on('end', function () {
-    console.log("THE END", this.config);
     this.writeConfig();
   });
 
@@ -63,7 +66,6 @@ yeoman.generators.Base.prototype.existsFile = function (path) {
 };
 
 yeoman.generators.Base.prototype.readFileAsJson = function(path, defaultValue) {
-	defaultValue = defaultValue || {};
 	return this.existsFile(path) && JSON.parse(this.readFileAsString(path)) || defaultValue;
 };
 
@@ -93,7 +95,7 @@ yeoman.generators.Base.prototype.promptLoop = function (prompts, done) {
   function handlePrompt (prompt, props, answer) {
     var promptName = prompt.name;
     var promptValue = props[promptName];
-    self.log(promptName, promptValue);
+    self.print(promptName, promptValue);
 
     if (isQuitAnswer(promptValue)) {
       self.debug(">> End prompt loop because of empty answer");
@@ -140,7 +142,7 @@ yeoman.generators.Base.prototype.appendLine = function (contentString, newLine) 
 };
 
 
-yeoman.generators.Base.prototype.safeEngine = function (text, data) {
+yeoman.generators.Base.prototype.mustacheEngine = function (text, data) {
   return _.template(text, data, {
     escape: /{{-([\s\S]+?)}}/g,
     evaluate: /{{([\s\S]+?)}}/g,
@@ -148,12 +150,20 @@ yeoman.generators.Base.prototype.safeEngine = function (text, data) {
   });
 };
 
+yeoman.generators.Base.prototype.underscoreEngine = function (text, data) {
+  return _.template(text, data, {
+    escape: /_-([\s\S]+?)_/g,
+    evaluate: /_([\s\S]+?)_/g,
+    interpolate: /_=([\s\S]+?)_/g
+  });
+};
+
 // Time to extend!
 util.inherits(PlayBase, yeoman.generators.Base);
 
-PlayBase.prototype.log = function (msg, context) {
+PlayBase.prototype.print = function (msg, context) {
   if (_.isString(msg)) {
-    yeoman.generators.Base.prototype.log(msg, context);
+    yeoman.generators.Base.prototype.log.write(msg, context);
   } else {
     console.log(arguments);
   }
@@ -161,7 +171,7 @@ PlayBase.prototype.log = function (msg, context) {
 
 PlayBase.prototype.debug = function (msg, context) {
   if (this.logLevel === "debug") {
-    this.log(msg, context);
+    this.print(msg, context);
   }
 };
 

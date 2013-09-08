@@ -26,7 +26,7 @@ var PlayGenerator = module.exports = function PlayGenerator(args, options, confi
 
 util.inherits(PlayGenerator, PlayBase);
 
-PlayGenerator.prototype.welcome = function welcome() {
+PlayGenerator.prototype.welcome = function () {
   // welcome message
   var welcome =
     '\n     _-----_' +
@@ -42,7 +42,7 @@ PlayGenerator.prototype.welcome = function welcome() {
   console.log(welcome);
 };
 
-PlayGenerator.prototype.askFor = function askFor() {
+PlayGenerator.prototype.askFor = function () {
   var cb = this.async();
 
   var prompts = [{
@@ -91,7 +91,7 @@ PlayGenerator.prototype.askFor = function askFor() {
   }.bind(this));
 };
 
-PlayGenerator.prototype.askForLangs = function askForLangs() {
+PlayGenerator.prototype.askForLangs = function () {
   var prompt = {
     name: 'lang',
     message: 'Supported langs?'
@@ -111,7 +111,7 @@ PlayGenerator.prototype.askForLangs = function askForLangs() {
   }.bind(this));
 };
 
-PlayGenerator.prototype.app = function app() {
+PlayGenerator.prototype.app = function () {
   this.directory('common', '.');
   this.directory(this.config.app.language, '.');
 
@@ -119,7 +119,7 @@ PlayGenerator.prototype.app = function app() {
   this.template('bower.json', 'bower.json');
 };
 
-PlayGenerator.prototype.projectfiles = function projectfiles() {
+PlayGenerator.prototype.projectfiles = function () {
   this.template('editorconfig', '.editorconfig');
   this.template('jshintrc', '.jshintrc');
 };

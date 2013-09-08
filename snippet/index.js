@@ -27,9 +27,8 @@ SnippetGenerator.prototype.askForTemplate = function () {
     console.log("No template at ", templatePath);
   } else {
     this.templateJson = this.readFileAsJson(templatePath);
-    console.log(this.templateJson );
 
-    if (this.templateJson.prompts) {
+    if (this.templateJson && this.templateJson.prompts) {
       var cb = this.async();
 
       this.prompt(this.templateJson.prompts, function (props, err) {
@@ -37,7 +36,7 @@ SnippetGenerator.prototype.askForTemplate = function () {
           return this.emit('error', err);
         }
 
-        this.templateJson = JSON.parse(this.safeEngine(this.readFileAsString(templatePath), props));
+        this.templateJson = JSON.parse(this.mustacheEngine(this.readFileAsString(templatePath), props));
 
         cb();
       }.bind(this));
@@ -72,7 +71,6 @@ SnippetGenerator.prototype.writeTemplate = function () {
       _.forEach(variables, function (variable) {
         var stringVariable = "@{" + variable + "}";
         variablesMapping[variable] = stringVariable;
-        console.log("replace", variable, "variablesMapping[\"" + variable + "\"]");
         gruntConfig = gruntConfig.replace(variable, "variablesMapping." + variable);
       });
 

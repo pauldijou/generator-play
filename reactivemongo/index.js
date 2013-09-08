@@ -11,6 +11,6 @@ var ReactivemongoGenerator = module.exports = function ReactivemongoGenerator(ar
 
 util.inherits(ReactivemongoGenerator, PlayBase);
 
-ReactivemongoGenerator.prototype.files = function files() {
+ReactivemongoGenerator.prototype.files = function () {
   
 };

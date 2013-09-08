@@ -1,0 +1,23 @@
+{
+  "welcome": [{
+    "status": "write"
+  },{
+    "status": "writeln",
+    "message": "Welcome to the Angular-ReactiveMongo-Autosource template"
+  },{
+    "status": "write"
+  }],
+  "prompts": [{
+    "type": "input",
+    "name": "name",
+    "message": "What is the name of your entity? (capitalized)"
+  }],
+  "bye": [{
+    "status": "write"
+  },{
+    "status": "ok",
+    "message": "Thanks you for using me!"
+  },{
+    "status": "write"
+  }]
+}
