@@ -51,21 +51,24 @@ var PlayBase = module.exports =  function PlayBase(args, options) {
     }
   });
 
+  // ASCII typo: Big
   var playStyle = chalk.green;
-  var generatorStyle = chalk.cyan;
-  this.log.writeln(playStyle("       _             _   ") + generatorStyle("                                _             "));
-  this.log.writeln(playStyle("      | |           | |  ") + generatorStyle("                               | |            "));
-  this.log.writeln(playStyle(" _ __ | | __ _ _   _| |  ") + generatorStyle(" __ _  ___ _ __   ___ _ __ __ _| |_ ___  _ __ "));
-  this.log.writeln(playStyle("| '_ \\| |/ _` | | | | | ") + generatorStyle(" / _` |/ _ \\ '_ \\ / _ \\ '__/ _` | __/ _ \\| '__|"));
-  this.log.writeln(playStyle("| |_) | | (_| | |_| |_| ") + generatorStyle("| (_| |  __/ | | |  __/ | | (_| | || (_) | |   "));
-  this.log.writeln(playStyle("| .__/|_|\\__,_|\\__, (_)") + generatorStyle("  \\__, |\\___|_| |_|\\___|_|  \\__,_|\\__\\___/|_|   "));
-  this.log.writeln(playStyle("| |             __/ |    ") + generatorStyle(" __/ |                                        "));
-  this.log.writeln(playStyle("|_|            |___/     ") + generatorStyle("|___/                                         "));
+  var yoStyle = chalk.cyan;
+  this.log.writeln(yoStyle("             ") + playStyle("       _             _ "));
+  this.log.writeln(yoStyle("             ") + playStyle("      | |           | |"));
+  this.log.writeln(yoStyle("  _   _  ___ ") + playStyle(" _ __ | | __ _ _   _| |"));
+  this.log.writeln(yoStyle(" | | | |/ _ \\") + playStyle("| '_ \\| |/ _` | | | | |"));
+  this.log.writeln(yoStyle(" | |_| | (_) ") + playStyle("| |_) | | (_| | |_| |_|"));
+  this.log.writeln(yoStyle("  \\__, |\\___/") + playStyle("| .__/|_|\\__,_|\\__, (_)"));
+  this.log.writeln(yoStyle("   __/ |     ") + playStyle("| |             __/ |  "));
+  this.log.writeln(yoStyle("  |___/      ") + playStyle("|_|            |___/   "));
   this.log.writeln();
 
   this.on('end', function () {
     this.writeConfig();
-    this.log.writeln();
+    this.log.write();
+    this.log.writeln(" " + yoStyle("yo") + playStyle("play!") + "... it is so good!");
+    this.log.write();
   });
 
 };
@@ -176,7 +179,7 @@ yeoman.generators.Base.prototype.recursiveApply = function (obj, fn, clone) {
 yeoman.generators.Base.prototype.recursiveEngine = function (engine, obj, data) {
   return this.recursiveApply(obj, function (value) {
     if (_.isString(value)) {
-      return engine(value, data);
+      return engine.call(this, value, data);
     } else {
       return value;
     }
@@ -205,6 +208,26 @@ yeoman.generators.Base.prototype.underscoreEngine = function (text, data) {
 
 yeoman.generators.Base.prototype.recursiveUnderscoreEngine = function (obj, data) {
   return this.recursiveEngine(this.underscoreEngine, obj, data);
+};
+
+yeoman.generators.Base.prototype.recursiveDefaultEngine = function (obj, data) {
+  return this.recursiveEngine(this.engine, obj, data);
+};
+
+yeoman.generators.Base.prototype.engines = function () {
+  return {
+    "default": this.engine,
+    "underscore": this.underscoreEngine,
+    "mustache": this.mustacheEngine
+  };
+};
+
+yeoman.generators.Base.prototype.recursiveEngines = function () {
+  return {
+    "default": this.recursiveDefaultEngine,
+    "underscore": this.recursiveUnderscoreEngine,
+    "mustache": this.recursiveMustacheEngine
+  };
 };
 
 // Time to extend!

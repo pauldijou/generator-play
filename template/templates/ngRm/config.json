@@ -10,7 +10,7 @@
   "prompts": [{
     "type": "input",
     "name": "name",
-    "message": "What is the name of your entity? (capitalized)"
+    "message": "[capitalized] What's the name of your entity?"
   }],
   "bye": [{
     "status": "write"

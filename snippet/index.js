@@ -35,7 +35,7 @@ SnippetGenerator.prototype.askForSnippet = function () {
           return this.emit('error', err);
         }
 
-        this.snippet = this.recursiveMustacheEngine(this.snippet, props);
+        this.snippet = this.recursiveEngines()[this.snippet.engine || "default"].call(this, this.snippet, props);
 
         cb();
       }.bind(this));

@@ -1,6 +1,8 @@
 var helpers = require("../../utils/inquire-helpers.js");
 var _ = require("lodash");
 
+var defaultVersions = []
+
 module.exports = {
   "prompts": [{
     "type": "input",
@@ -39,7 +41,7 @@ module.exports = {
   }],
   "app": {
     "conf": {
-      "application": ['mongodb.uri="mongodb://{{=username}}{{ if(username && password) { }}:{{=password}}{{ } }}{{ if(username) { }}@{{ } }}{{=host}}:{{=port}}/{{=dbname}}"'],
+      "application": ['mongodb.uri="mongodb://<%= username %><% if(username && password) { %>:<%= password %><% } %><% if(username) { %>@<% } %><%= host %>:<%= port %>/<%= dbname %>"'],
       "plugins": []
     },
     "project": {

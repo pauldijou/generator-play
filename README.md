@@ -1,7 +1,7 @@
-# Generator play
+# yoplay!
 [![Build Status](https://secure.travis-ci.org/pauldijou/generator-play.png?branch=master)](https://travis-ci.org/pauldijou/generator-play)
 
-A generator for Yeoman.
+A Yeoman generator for play! applications.
 
 ## Getting started
 - Make sure you have [yo](https://github.com/yeoman/yo) installed:
