@@ -1,0 +1,5 @@
+{
+  "name": "<%= global.app.name %>",
+  "version": "<%= global.app.version %>",
+  "dependencies": {}
+}

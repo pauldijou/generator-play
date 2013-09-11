@@ -4,125 +4,176 @@ var path = require('path');
 var chalk = require('chalk');
 var _ = require('lodash');
 var yeoman = require('yeoman-generator');
+var fs = require('fs');
 var PlayBase = require('../utils/play-base');
+
+// ----------------------------------------------------------------------------
+// Generator configuration
+// ----------------------------------------------------------------------------
 
 var PlayGenerator = module.exports = function PlayGenerator(args, options, config) {
   PlayBase.apply(this, arguments);
 
   this.config.app.secret = this._generateSecretKey();
 
-  this.on('end', function () {
-    this.installDependencies({ skipInstall: options['skip-install'] });
+  this.argument("instanceName", {
+    "required": true,
+    "optional": false,
+    "type": String
   });
 
-  this.isScala = function () {
-    return this.config.app.language === 'scala';
-  };
+  this.option("path", {
+    "type": String
+  });
 
-  this.isJava = function () {
-    return this.config.app.language === 'java';
-  };
+  this.option("config", {
+    "type": String,
+    "default": "config.js"
+  });
 };
 
 util.inherits(PlayGenerator, PlayBase);
 
+// ----------------------------------------------------------------------------
+// Load the instance configuration
+// ----------------------------------------------------------------------------
+
+PlayGenerator.prototype.loadInstance = function () {
+
+  this.instance = {};
+  this.instance.global = this.config;
+  this.instance.path = path.join( this.options.path || this.sourceRoot(), this.instanceName );
+  this.instance.config = require( path.join(this.instance.path, this.options.config || "config.js") );
+
+  if (!this.instance.config) {
+    return this.emit("error", "No config file found for name '" + this.instanceName + "' at path '" + instance.path + "'");
+  }
+
+};
+
+// ----------------------------------------------------------------------------
+// Say hello to the nice user
+// ----------------------------------------------------------------------------
+
 PlayGenerator.prototype.welcome = function () {
-  // welcome message
-  var welcome =
-    '\n     _-----_' +
-    '\n    |       |' +
-    '\n    |' + chalk.red('--(o)--') + '|   .--------------------------.' +
-    '\n   `---------´  |    ' + chalk.yellow.bold('Welcome to Yeoman') + ',    |' +
-    '\n    ' + chalk.yellow('(') + ' _' + chalk.yellow('´U`') + '_ ' + chalk.yellow(')') + '   |   ' + chalk.yellow.bold('ladies and gentlemen!') + '  |' +
-    '\n    /___A___\\   \'__________________________\'' +
-    '\n     ' + chalk.yellow('|  ~  |') +
-    '\n   __' + chalk.yellow('\'.___.\'') + '__' +
-    '\n ´   ' + chalk.red('`  |') + '° ' + chalk.red('´ Y') + ' `\n';
-
-  console.log(welcome);
+  if (this.instance.config && this.instance.config.welcome) {
+    _.forEach(this.instance.config.welcome, function (w) {
+      this._log(w.status, w.message);
+    }.bind(this))
+  }
 };
 
-PlayGenerator.prototype.askFor = function () {
-  var cb = this.async();
+// ----------------------------------------------------------------------------
+// Handle prompts
+// ----------------------------------------------------------------------------
 
-  var prompts = [{
-    type: 'input',
-    name: 'playVersion',
-    message: 'Which version of Play! do you want to use?',
-    default: this.config.app.playVersion
-  },
-  {
-    type: 'list',
-    name: 'language',
-    message: 'Which language do you want to use to code your application?',
-    default: 'scala',
-    choices: ['scala', 'java']
-  },
-  {
-    type: 'input',
-    name: 'appName',
-    message: 'What is the name of your application?',
-    default: path.basename(this.paths.root)
-  }];
+PlayGenerator.prototype.prePrompts = function () {
+  if (this.instance.config && this.instance.config.prePrompts) {
+    this.instance.config.prePrompts.call(this);
+  }
+};
 
-  this.prompt(prompts, function (props, err) {
-    console.log(err);
-    console.log(props);
-    if (err) {
-      return this.emit('error', err);
+PlayGenerator.prototype.doPrompts = function () {
+  if (this.instance.config && this.instance.config.prompts) {
+    var cb = this.async();
+
+    this.instance.prompts = {};
+
+    this.prompt(this.instance.config.prompts, function (props, err) {
+      if (err) {
+        return this.emit('error', err);
+      }
+
+      this.instance.prompts = props;
+      this.log.write();
+
+      cb();
+    }.bind(this));
+  }
+};
+
+PlayGenerator.prototype.postPrompts = function () {
+  if (this.instance.config && this.instance.config.postPrompts) {
+    this.instance.config.postPrompts.call(this);
+  }
+};
+
+// ----------------------------------------------------------------------------
+// instance files
+// ----------------------------------------------------------------------------
+
+PlayGenerator.prototype.writeFiles = function () {
+  if (this.instance.path) {
+    this._writeDir(this.instance.path);
+  }
+};
+
+// ----------------------------------------------------------------------------
+// Update project configuration files
+// ----------------------------------------------------------------------------
+
+PlayGenerator.prototype.writeConfFiles = function () {
+  if (this.instance.config) {
+    var packagePath = this.paths.root + "/package.json";
+    var bowerPath = this.paths.root + "/bower.json";
+    var gruntPath = this.paths.root + "/Gruntfile.js";
+    var constantsPath = this.paths.conf + "/constants.json";
+
+    this._updateJson(packagePath, "package");
+    this._updateJson(bowerPath, "bower");
+    this._updateJson(constantsPath, "constants");
+
+    if (this.instance.config.grunt && this.existsFile(gruntPath)) {
+      var gruntfile = this.readFileAsString(gruntPath);
+
+      var startToken = "initConfig(";
+      var endToken = ");";
+      var startConfig = gruntfile.indexOf(startToken) + startToken.length;
+      var endConfig = gruntfile.indexOf(endToken, startConfig);
+
+      var gruntConfig = gruntfile.substring(startConfig, endConfig);
+
+      // Preserve all JavaScript variables inside the Gruntfile
+      var variables = ["configuration"];
+      var variablesMapping = {};
+      _.forEach(variables, function (variable) {
+        var stringVariable = "@{" + variable + "}";
+        variablesMapping[variable] = stringVariable;
+        gruntConfig = gruntConfig.replace(variable, "variablesMapping." + variable);
+      });
+
+      var gruntConfigObject;
+      eval("gruntConfigObject = " + gruntConfig);
+      gruntConfigObject = this._merge(gruntConfigObject, this.instance.config.grunt);
+
+      gruntConfig = JSON.stringify(gruntConfigObject, null, "  ");
+
+      _.forEach(variablesMapping, function (stringVariable, variable) {
+        gruntConfig = gruntConfig.replace("\"" + stringVariable + "\"", variable);
+      });
+
+      gruntfile = gruntfile.substring(0, startConfig) + gruntConfig + gruntfile.substring(endConfig);
+
+      this.writeFileFromString(gruntfile, "Gruntfile.js");
     }
-
-    this.config.app.playVersion = props.playVersion;
-    this.config.app.language = props.language;
-    this.config.app.name = props.appName;
-
-    if (this.isScala()) {
-      this.config.global.emptyBrackets = '';
-      this.config.app.dependencies.push('jdbc');
-      this.config.app.dependencies.push('anorm');
-    }
-    else if (this.isJava()) {
-      this.config.app.dependencies.push('javaCore');
-      this.config.app.dependencies.push('javaJdbc');
-      this.config.app.dependencies.push('javaEbean');
-    }
-
-    cb();
-  }.bind(this));
+  }
 };
 
-PlayGenerator.prototype.askForLangs = function () {
-  var prompt = {
-    name: 'lang',
-    message: 'Supported langs?'
-  };
+// ----------------------------------------------------------------------------
+// Say goodbye and hope he will use you again...
+// ----------------------------------------------------------------------------
 
-  var cb = this.async();
-
-  this.promptLoop(prompt, function (results, err) {
-    console.log("res", results);
-    console.log("err", err);
-    if (err) {
-      return this.emit('error', err);
-    }
-
-    this.config.app.langs = results;
-    cb();
-  }.bind(this));
+PlayGenerator.prototype.bye = function () {
+  if (this.instance.config && this.instance.config.bye) {
+    _.forEach(this.instance.config.bye, function (w) {
+      this._log(w.status, w.message);
+    }.bind(this))
+  }
 };
 
-PlayGenerator.prototype.app = function () {
-  this.directory('common', '.');
-  this.directory(this.config.app.language, '.');
-
-  this.template('package.json', 'package.json');
-  this.template('bower.json', 'bower.json');
-};
-
-PlayGenerator.prototype.projectfiles = function () {
-  this.template('editorconfig', '.editorconfig');
-  this.template('jshintrc', '.jshintrc');
-};
+// ----------------------------------------------------------------------------
+// Private utils
+// ----------------------------------------------------------------------------
 
 PlayGenerator.prototype._generateSecretKey = function (length) {
   length = length || 64;
@@ -133,4 +184,50 @@ PlayGenerator.prototype._generateSecretKey = function (length) {
   }
 
   return secretKey.replace("\\", "/");
+};
+
+PlayGenerator.prototype._log = function (status, message) {
+  if (message) {
+    this.log[status](message);
+  } else {
+    this.log[status]();
+  }
+};
+
+PlayGenerator.prototype._writeDir = function (currentPath) {
+  var files = fs.readdirSync(currentPath);
+  _(files)
+    .map(function (file) {
+      return path.join(currentPath, file);
+    })
+    .reject(function (filePath) {
+      var relativeFilePath = filePath.substr(this.instance.path.length + 1);
+      return this.instance.config.files
+        && this.instance.config.files[relativeFilePath]
+        && this.instance.config.files[relativeFilePath].excluded
+        && eval(this.instance.config.files[relativeFilePath].excluded);
+    }.bind(this))
+    .forEach(function (filePath) {
+      var stat = fs.statSync(filePath);
+      stat.isDirectory() ? this._writeDir(filePath) : this._writeFile(filePath);
+    }.bind(this)); 
+};
+
+PlayGenerator.prototype._writeFile = function (filePath) {
+  var destinationPath = this.underscoreEngine(filePath, this.instance.prompts).replace(this.instance.path, this.paths.root);
+  this.template(filePath, destinationPath, this.instance);
+};
+
+PlayGenerator.prototype._merge = function (source1, source2) {
+  return _.merge(source1, source2, function (a, b) {
+    return _.isArray(a) ? a.concat(b) : undefined;
+  });
+};
+
+PlayGenerator.prototype._updateJson = function (path, property) {
+  if (this.instance.config[property] && this.existsFile(path)) {
+    var data = this.readFileAsJson(path);
+    data = this._merge(data, this.instance.config[property]);
+    this.writeFileFromJson(path, data);
+  }
 };

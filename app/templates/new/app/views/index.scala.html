@@ -1,0 +1,11 @@
+@()
+
+@templates.main() {
+    
+  <h1><%= prompts.appName %></h1>
+  <p>
+    Read local documentation <a href="/@documentation/Home">here</a>.
+    Read <%= prompts.language %> API <a href="/@documentation/api/<%= prompts.language %>/index.html">here</a>.
+  </p>
+    
+}

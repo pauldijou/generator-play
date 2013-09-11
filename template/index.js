@@ -124,10 +124,4 @@ TemplateGenerator.prototype._writeFile = function (filePath) {
   this.template(filePath, destinationPath, this.properties);
 };
 
-TemplateGenerator.prototype._log = function (status, message) {
-  if (message) {
-    this.log[status](message);
-  } else {
-    this.log[status]();
-  }
-};
+

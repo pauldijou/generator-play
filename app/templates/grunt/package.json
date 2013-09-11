@@ -1,4 +1,7 @@
 {
+  "name": "<%= global.app.name %>",
+  "version": "<%= global.app.version %>",
+  "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.0",
     "grunt-contrib-copy": "~0.4.0",

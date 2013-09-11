@@ -18,7 +18,7 @@ class IntegrationSpec extends Specification {
 
         browser.goTo("http://localhost:3333/")
 
-        browser.pageSource must contain("<%= app.name %>")
+        browser.pageSource must contain("<%= prompts.appName %>")
        
       }
     }

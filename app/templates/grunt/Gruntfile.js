@@ -47,10 +47,10 @@ module.exports = function (grunt) {
       // All assets (CSS, JS, images, ...) you want to expose to your users
       "public": {
         "root": "public",
-        "styles": "<%= config.dir.public.root %>/stylesheets",
-        "scripts": "<%= config.dir.public.root %>/javascripts",
-        "images": "<%= config.dir.public.root %>/images",
-        "fonts": "<%= config.dir.public.styles %>/fonts"
+        "styles": "<%%= config.dir.public.root %>/stylesheets",
+        "scripts": "<%%= config.dir.public.root %>/javascripts",
+        "images": "<%%= config.dir.public.root %>/images",
+        "fonts": "<%%= config.dir.public.styles %>/fonts"
       },
       // Configuration of your project
       "project": {
@@ -67,10 +67,10 @@ module.exports = function (grunt) {
       // All assets you don't want to expose to your users, like LESS or CoffeeScript files
       "resources": {
         "root": "resources",
-        "less": "<%= config.dir.resources.root %>/less",
-        "sass": "<%= config.dir.resources.root %>/sass",
-        "stylus": "<%= config.dir.resources.root %>/stylus",
-        "coffee": "<%= config.dir.resources.root %>/coffee"
+        "less": "<%%= config.dir.resources.root %>/less",
+        "sass": "<%%= config.dir.resources.root %>/sass",
+        "stylus": "<%%= config.dir.resources.root %>/stylus",
+        "coffee": "<%%= config.dir.resources.root %>/coffee"
       }
     }
   };
@@ -117,19 +117,19 @@ module.exports = function (grunt) {
       // Clean all public resources that are not yours
       // They should be imported/generated from a remote source
       "public": [
-        "<%= config.dir.public.scripts %>/vendors/**/*",
-        "<%= config.dir.public.styles %>/vendors/**/*"
+        "<%%= config.dir.public.scripts %>/vendors/**/*",
+        "<%%= config.dir.public.styles %>/vendors/**/*"
       ]
     },
 
-    {{ if(_.contains(grunt.cssPreprocessors, "LESS")) { }}
+    <% if(_.contains(prompts.cssPreprocessors, "LESS")) { %>
     "less": {
       "options": {
-        "paths": ["<%= config.dir.bower %>", "<%= config.dir.resources.less %>"]
+        "paths": ["<%%= config.dir.bower %>", "<%%= config.dir.resources.less %>"]
       },
       "raw": {
         "files": {
-          "<%= config.dir.public.styles %>/<%= config.play.application.files.style %>.css": "<%= config.dir.resources.less %>/less/app.less"
+          "<%%= config.dir.public.styles %>/<%%= config.play.application.files.style %>.css": "<%%= config.dir.resources.less %>/less/app.less"
         }
       },
       "dist": {
@@ -137,11 +137,11 @@ module.exports = function (grunt) {
           "compress": true
         },
         "files": [{
-          "<%= config.dir.public.styles %>/<%= config.play.application.files.style %>.<%= config.play.application.version %>.min.css": "<%= config.dir.resources.less %>/less/app.less"
+          "<%%= config.dir.public.styles %>/<%%= config.play.application.files.style %>.<%%= config.play.application.version %>.min.css": "<%%= config.dir.resources.less %>/less/app.less"
         }]
       }
     },
-    {{ } }}
+    <% } %>
 
     "uglify": {
       "options": {
@@ -153,12 +153,12 @@ module.exports = function (grunt) {
           "report": "min"
         },
         "files": [{
-          "dest": "<%= config.dir.public.scripts %>/<%= config.play.application.files.script %>.<%= config.play.application.version %>.min.js",
+          "dest": "<%%= config.dir.public.scripts %>/<%%= config.play.application.files.script %>.<%%= config.play.application.version %>.min.js",
           "src": [
-            "<%= config.dir.public.scripts %>/app.js",
-            "<%= config.dir.public.scripts %>/*.js",
-            "<%= config.dir.public.scripts %>/!(vendors)/**/*.js",
-            "!<%= config.dir.public.scripts %>/<%= config.play.application.files.script %>.*.min.js"
+            "<%%= config.dir.public.scripts %>/app.js",
+            "<%%= config.dir.public.scripts %>/*.js",
+            "<%%= config.dir.public.scripts %>/!(vendors)/**/*.js",
+            "!<%%= config.dir.public.scripts %>/<%%= config.play.application.files.script %>.*.min.js"
           ]
         }]
       }
@@ -170,7 +170,7 @@ module.exports = function (grunt) {
         "forever": true
       },
       "less": {
-        "files": ["<%= config.dir.resources.less %>/*.less"],
+        "files": ["<%%= config.dir.resources.less %>/*.less"],
         "tasks": ["less:raw"]
       },
       "public": {
@@ -178,17 +178,16 @@ module.exports = function (grunt) {
           "livereload": true
         },
         "files": [
-          "<%= config.dir.app.root %>/**/*.scala",
-          "<%= config.dir.app.root %>/**/*.html",
-          "<%= config.dir.conf.root %>/*",
-          "<%= config.dir.public.scripts %>/*.js",
-          "<%= config.dir.public.scripts %>/**/*.js",
-          "<%= config.dir.public.styles %>/*.css",
-          "<%= config.dir.public.styles %>/**/*.css"
+          "<%%= config.dir.app.root %>/**/*.scala",
+          "<%%= config.dir.app.root %>/**/*.html",
+          "<%%= config.dir.conf.root %>/*",
+          "<%%= config.dir.public.scripts %>/*.js",
+          "<%%= config.dir.public.scripts %>/**/*.js",
+          "<%%= config.dir.public.styles %>/*.css",
+          "<%%= config.dir.public.styles %>/**/*.css"
         ],
         "tasks": []
       }
     }
   });
-
 };
