@@ -114,6 +114,7 @@ module.exports = function (grunt) {
     "config": configuration,
 
     "clean": {
+      "bower": [],
       // Clean all public resources that are not yours
       // They should be imported/generated from a remote source
       "public": [
@@ -161,6 +162,24 @@ module.exports = function (grunt) {
             "!<%%= config.dir.public.scripts %>/<%%= config.play.application.files.script %>.*.min.js"
           ]
         }]
+      }
+    },
+
+    "parallel": {
+      "options": {
+        "grunt": true
+      },
+      "bowerBuild": {
+        "tasks": []
+      }
+    },
+
+    "shell": {
+      "bowerInstall": {
+        "command": "bower install",
+        "options": {
+          "stdout": true
+        }
       }
     },
 

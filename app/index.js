@@ -17,18 +17,13 @@ var PlayGenerator = module.exports = function PlayGenerator(args, options, confi
   this.config.app.secret = this._generateSecretKey();
 
   this.argument("instanceName", {
-    "required": true,
-    "optional": false,
+    "required": false,
+    "optional": true,
     "type": String
   });
 
   this.option("path", {
     "type": String
-  });
-
-  this.option("config", {
-    "type": String,
-    "default": "config.js"
   });
 };
 
@@ -42,11 +37,27 @@ PlayGenerator.prototype.loadInstance = function () {
 
   this.instance = {};
   this.instance.global = this.config;
-  this.instance.path = path.join( this.options.path || this.sourceRoot(), this.instanceName );
-  this.instance.config = require( path.join(this.instance.path, this.options.config || "config.js") );
+  this.instance.name = this.instanceName || "new";
+  this.instance.options = this.options;
+
+  var rootPaths = this.options.path && [this.options.path] || (this.config.paths || []).concat([this.sourceRoot()]);
+
+  _.forEach(rootPaths, function (rootPath) {
+    var instancePath = path.join(rootPath, this.instance.name);
+    if (!this.instance.path && this.existsFile(instancePath)) {
+      this.instance.path = instancePath;
+    }
+  }.bind(this));
+
+  if (!this.instance.path) {
+    return this.emit('error', "No template found for name '" + this.instance.name + "' at paths '[" + rootPaths + "]'");
+  }
+
+  this.instance.stats = fs.statSync( this.instance.path );
+  this.instance.config = require( this.instance.path );
 
   if (!this.instance.config) {
-    return this.emit("error", "No config file found for name '" + this.instanceName + "' at path '" + instance.path + "'");
+    return this.emit("error", "No config file found for name '" + this.instance.name + "' at path '" + this.instance.path + "'");
   }
 
 };
@@ -85,6 +96,8 @@ PlayGenerator.prototype.doPrompts = function () {
       }
 
       this.instance.prompts = props;
+      this.instance.config = this.recursiveEngines()[this.instance.config.engine || "default"].call(this, this.instance.config, this.instance);
+      
       this.log.write();
 
       cb();
@@ -103,7 +116,7 @@ PlayGenerator.prototype.postPrompts = function () {
 // ----------------------------------------------------------------------------
 
 PlayGenerator.prototype.writeFiles = function () {
-  if (this.instance.path) {
+  if (this.instance.path && this.instance.stats.isDirectory()) {
     this._writeDir(this.instance.path);
   }
 };
@@ -214,13 +227,15 @@ PlayGenerator.prototype._writeDir = function (currentPath) {
 };
 
 PlayGenerator.prototype._writeFile = function (filePath) {
-  var destinationPath = this.underscoreEngine(filePath, this.instance.prompts).replace(this.instance.path, this.paths.root);
+  var destinationPath = this.underscoreEngine(filePath, this.instance).replace(this.instance.path, this.paths.root);
   this.template(filePath, destinationPath, this.instance);
 };
 
 PlayGenerator.prototype._merge = function (source1, source2) {
   return _.merge(source1, source2, function (a, b) {
-    return _.isArray(a) ? a.concat(b) : undefined;
+    return _.isArray(a) ? _.uniq(a.concat(b), function (value) {
+      return _.isObject(value) || _.isArray(value) ? JSON.stringify(value) : value;
+    }) : undefined;
   });
 };
 

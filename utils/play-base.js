@@ -64,7 +64,11 @@ var PlayBase = module.exports =  function PlayBase(args, options) {
   this.log.writeln(yoStyle("  |___/      ") + playStyle("|_|            |___/   "));
   this.log.writeln();
 
-  this.on('end', function () {
+  this.on("error", function (msg) {
+    this.log.error(chalk.red("Error: ") + msg);
+  });
+
+  this.on("end", function () {
     this.writeConfig();
     this.log.write();
     this.log.writeln(" " + yoStyle("yo") + playStyle("play!") + "... it is so good!");

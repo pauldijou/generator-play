@@ -1,0 +1,18 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Main template, the root page of your single page app
+GET     /                           controllers.Application.main(url: String = "")
+
+# All HTML templates, prefixed by /views
+GET     /views/index                controllers.Application.index<%= global.global.emptyBrackets %>
+
+# REST API consuming and serving JSON, prefixed by /api
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+# Fallback route to catch all HTML5 navigation and let the JavaScript code
+# of the root page handle it.
+GET     /*url                       controllers.Application.main(url: String)

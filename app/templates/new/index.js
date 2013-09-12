@@ -5,7 +5,7 @@ module.exports = {
     "type": "input",
     "name": "playVersion",
     "message": "Which version of Play! do you want to use?",
-    "default": "2.1.3"
+    "default": "2.1.4"
   },
   {
     "type": "list",
@@ -41,14 +41,26 @@ module.exports = {
     }
   },
   files: {
-    "config.js": {
+    "index.js": {
       excluded: true
+    },
+    "app/controllers/Application.scala": {
+      excluded: "this.instance.prompts.language === 'java'"
     },
     "app/controllers/Application.java": {
       excluded: "this.instance.prompts.language === 'scala'"
     },
-    "app/controllers/Application.scala": {
+    "test/ApplicationSpec.scala": {
       excluded: "this.instance.prompts.language === 'java'"
+    },
+    "test/ApplicationTest.java": {
+      excluded: "this.instance.prompts.language === 'scala'"
+    },
+    "test/IntegrationSpec.scala": {
+      excluded: "this.instance.prompts.language === 'java'"
+    },
+    "test/IntegrationTest.java": {
+      excluded: "this.instance.prompts.language === 'scala'"
     }
   }
 }

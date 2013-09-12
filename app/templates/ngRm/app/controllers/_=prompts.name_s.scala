@@ -14,6 +14,6 @@ import play.autosource.reactivemongo._
 
 import models._
 
-object <%= name %>s extends ReactiveMongoAutoSourceController[<%= name %>] {
-  val coll = db.collection[JSONCollection]("<%= name %>s")
+object <%= prompts.name %>s extends ReactiveMongoAutoSourceController[<%= prompts.name %>] {
+  val coll = db.collection[JSONCollection]("<%= prompts.name %>s")
 }

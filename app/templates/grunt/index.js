@@ -20,7 +20,7 @@ module.exports = {
     this.config.grunt.preprocessors.js = this.instance.prompts.jsPreprocessors;
   },
   files: {
-    "config.js": {
+    "index.js": {
       excluded: true
     }
   }

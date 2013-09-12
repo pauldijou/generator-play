@@ -1,4 +1,4 @@
-{
+module.exports = {
   "welcome": [{
     "status": "write"
   },{
@@ -21,7 +21,7 @@
     "status": "write"
   }],
   "files": {
-    "config.json": {
+    "index.js": {
       "excluded": true
     }
   }
