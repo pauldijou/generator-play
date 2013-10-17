@@ -1,6 +1,6 @@
 {
   "application": {
-    "version": "<% global.app.version %>",
+    "version": "<% config.app.version %>",
     "files": {
       "style": "app",
       "script": "app"

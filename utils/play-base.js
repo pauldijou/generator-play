@@ -1,59 +1,40 @@
 'use strict';
 var util = require('util');
 var path = require('path');
-var fs = require('fs');
-var _ = require('lodash');
-var chalk = require('chalk');
-var yeoman = require('yeoman-generator');
-
-var CONFIG_FILE = "generator-play.json";
-
-var DEFAULT_CONFIG = {
-	global: {
-    emptyBrackets: '()'
-  },
-  app: {
-    name: '',
-    version: '0.0.1-SNAPSHOT',
-    playVersion: '2.1.3',
-    language: '',
-    secret: '',
-    langs: [],
-    dependencies: []
-  }
-};
-
-var PATH_ROOT = process.cwd();
+var TemplateGenerator = require('generator-template');
 
 var PlayBase = module.exports =  function PlayBase(args, options) {
-  this.logLevel = options["log-level"] || (options.verbose && "debug") || "info";
+  TemplateGenerator.Base.apply(this, arguments);
 
-  yeoman.generators.Base.apply(this, arguments);
-  
-  // Set paths
-  this.paths = {
-    "root": PATH_ROOT,
-    "app": path.join(PATH_ROOT, '/app'),
-    "conf": path.join(PATH_ROOT, '/conf'),
-    "public": path.join(PATH_ROOT, '/public'),
-    "resources": path.join(PATH_ROOT, '/resources'),
-    "project": path.join(PATH_ROOT, '/project'),
-    "test": path.join(PATH_ROOT, '/test')
-  };
-
-  // Extend the Yeoman Generator Base
-  this.pkg = this.readFileAsJson(path.join(this.paths.root, '/package.json'), {});
-  this.config = this.readConfig();
-
-  _.mixin({
-    capitalize: function (string) {
-      return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+  // Override default config
+  this.constants.DEFAULT_CONFIG = this._.extend(this.constants.DEFAULT_CONFIG, {
+    global: {
+      emptyBrackets: '()'
+    },
+    app: {
+      name: '',
+      version: '0.0.1-SNAPSHOT',
+      playVersion: '2.2.0',
+      language: '',
+      secret: '',
+      langs: [],
+      dependencies: []
     }
   });
 
+  // Set paths
+  this.paths = this._.extend(this.paths, {
+    "app": path.join(this.constants.PATH_ROOT, '/app'),
+    "conf": path.join(this.constants.PATH_ROOT, '/conf'),
+    "public": path.join(this.constants.PATH_ROOT, '/public'),
+    "resources": path.join(this.constants.PATH_ROOT, '/resources'),
+    "project": path.join(this.constants.PATH_ROOT, '/project'),
+    "test": path.join(this.constants.PATH_ROOT, '/test')
+  });
+
   // ASCII typo: Big
-  var playStyle = chalk.green;
-  var yoStyle = chalk.cyan;
+  var playStyle = this.chalk.green;
+  var yoStyle = this.chalk.cyan;
   this.log.writeln(yoStyle("             ") + playStyle("       _             _ "));
   this.log.writeln(yoStyle("             ") + playStyle("      | |           | |"));
   this.log.writeln(yoStyle("  _   _  ___ ") + playStyle(" _ __ | | __ _ _   _| |"));
@@ -64,10 +45,6 @@ var PlayBase = module.exports =  function PlayBase(args, options) {
   this.log.writeln(yoStyle("  |___/      ") + playStyle("|_|            |___/   "));
   this.log.writeln();
 
-  this.on("error", function (msg) {
-    this.log.error(chalk.red("Error: ") + msg);
-  });
-
   this.on("end", function () {
     this.writeConfig();
     this.log.write();
@@ -77,228 +54,8 @@ var PlayBase = module.exports =  function PlayBase(args, options) {
 
 };
 
-// Generic methods
-yeoman.generators.Base.prototype.exists = function (val) {
-	return !_.isNull(val) && !_.isUndefined(val);
-};
-
-yeoman.generators.Base.prototype.existsFile = function (path) {
-	return fs.existsSync(path);
-};
-
-yeoman.generators.Base.prototype.readFileAsJson = function(path, defaultValue) {
-	return this.existsFile(path) && JSON.parse(this.readFileAsString(path)) || defaultValue;
-};
-
-yeoman.generators.Base.prototype.writeFileFromJson = function(path, value, space) {
-  space = space || "  ";
-  return this.writeFileFromString(JSON.stringify(value, null, space), path);
-};
-
-yeoman.generators.Base.prototype.promptLoop = function (prompts, done) {
-  var self = this;
-  var results = [];
-  var isEnded = false;
-  var isMultiple = _.isArray(prompts);
-  prompts = isMultiple ? prompts : [prompts];
-
-  var cb = self.async();
-
-  // Return true if the value should stop the loop
-  // Possible values are null, undefined or empty string
-  // Otherwise, return false
-  function isQuitAnswer (promptValue) {
-    return _.isUndefined(promptValue) || _.isNull(promptValue) || promptValue === "";
-  };
-
-  // Handle a prompt by updating the answer with its value
-  // or end the loop
-  function handlePrompt (prompt, props, answer) {
-    var promptName = prompt.name;
-    var promptValue = props[promptName];
-    self.print(promptName, promptValue);
-
-    if (isQuitAnswer(promptValue)) {
-      self.debug(">> End prompt loop because of empty answer");
-      isEnded = true;
-    } else {
-      answer[promptName] = promptValue;
-    }
-  };
-
-  // Perform one iteration of the loop.
-  // Depending on the answer(s), will call itself
-  // to iterate one more step or stop the loop.
-  function ask () {
-    self.prompt(prompts, function (props, err) {
-      if (err) {
-        self.debug(">> End prompt loop because of error: ", err);
-        isEnded = true;
-        done(results, err);
-      }
-
-      var answer = {};
-
-      _.map(prompts, function (prompt) {
-        handlePrompt(prompt, props, answer);
-      });
-
-      if (!isEnded) {
-        results.push(isMultiple ? answer : answer[prompts[0].name]);
-        self.debug("Ask one more time. Current status: ", results);
-        ask();
-      } else {
-        self.debug("End of prompt loop. Final status: ", results);
-        done(results, null);
-      }
-    }.bind(self));
-  };
-  
-  // Ask at least one time the prompts
-  ask();
-};
-
-yeoman.generators.Base.prototype.appendLine = function (contentString, newLine) {
-  return contentString + "\n" + newLine;
-};
-
-yeoman.generators.Base.prototype.recursiveApply = function (obj, fn, clone) {
-  if (clone) {
-    obj = _.clone(obj);
-  }
-
-  _.forEach(obj, function (value, key) {
-    if (_.isArray(value)) {
-      obj[key] = _.map(value, fn);
-    } else if(_.isObject(value)) {
-      this.recursiveApply(value, fn, clone);
-    } else {
-      obj[key] = fn(value);
-    }
-  }.bind(this));
-
-  return obj;
-};
-
-yeoman.generators.Base.prototype.recursiveEngine = function (engine, obj, data) {
-  return this.recursiveApply(obj, function (value) {
-    if (_.isString(value)) {
-      return engine.call(this, value, data);
-    } else {
-      return value;
-    }
-  }.bind(this));
-};
-
-yeoman.generators.Base.prototype.mustacheEngine = function (text, data) {
-  return _.template(text, data, {
-    escape: /{{-([\s\S]+?)}}/g,
-    evaluate: /{{([\s\S]+?)}}/g,
-    interpolate: /{{=([\s\S]+?)}}/g
-  });
-};
-
-yeoman.generators.Base.prototype.recursiveMustacheEngine = function (obj, data) {
-  return this.recursiveEngine(this.mustacheEngine, obj, data);
-};
-
-yeoman.generators.Base.prototype.underscoreEngine = function (text, data) {
-  return _.template(text, data, {
-    escape: /_-([\s\S]+?)_/g,
-    evaluate: /_([\s\S]+?)_/g,
-    interpolate: /_=([\s\S]+?)_/g
-  });
-};
-
-yeoman.generators.Base.prototype.recursiveUnderscoreEngine = function (obj, data) {
-  return this.recursiveEngine(this.underscoreEngine, obj, data);
-};
-
-yeoman.generators.Base.prototype.recursiveDefaultEngine = function (obj, data) {
-  return this.recursiveEngine(this.engine, obj, data);
-};
-
-yeoman.generators.Base.prototype.engines = function () {
-  return {
-    "default": this.engine,
-    "underscore": this.underscoreEngine,
-    "mustache": this.mustacheEngine
-  };
-};
-
-yeoman.generators.Base.prototype.recursiveEngines = function () {
-  return {
-    "default": this.recursiveDefaultEngine,
-    "underscore": this.recursiveUnderscoreEngine,
-    "mustache": this.recursiveMustacheEngine
-  };
-};
-
 // Time to extend!
-util.inherits(PlayBase, yeoman.generators.Base);
-
-PlayBase.prototype.print = function (msg, context) {
-  if (_.isString(msg)) {
-    yeoman.generators.Base.prototype.log.write(msg, context);
-  } else {
-    console.log(arguments);
-  }
-};
-
-PlayBase.prototype.debug = function (msg, context) {
-  if (this.logLevel === "debug") {
-    this.print(msg, context);
-  }
-};
-
-
-PlayBase.prototype.getConfigPath = function () {
-  return path.join(this.paths.root, CONFIG_FILE);
-};
-
-PlayBase.prototype.readConfig = function () {
-  return this.readFileAsJson(this.getConfigPath(), DEFAULT_CONFIG);
-};
-
-PlayBase.prototype.writeConfig = function () {
-  this.writeFileFromJson(this.getConfigPath(), this.config);
-};
-
-// Handling conf files
-function getConfRegex (key) {
-  return new RegExp("^" + key + "=(.*)$", "m");
-};
-
-PlayBase.prototype.readConfAsString = function (env) {
-  env = env || "application";
-  return this.readFileAsString(path.join(this.paths.conf, env + ".conf"));
-};
-
-PlayBase.prototype.writeConfFromString = function (stringConf, env) {
-  env = env || "application";
-  return this.writeFileFromString(stringConf, path.join(this.paths.conf, env + ".conf"));
-};
-
-PlayBase.prototype.hasConf = function (key, env) {
-  return getConfRegex(key).test(this.readConfAsString(env));
-};
-
-PlayBase.prototype.getAllConfs = function (subkey, env) {
-  // TODO: wrong, do not work, correct it when time
-  return getConfRegex("[^=]*" + subkey + "[^=]*").exec(this.readConfAsString(env));
-};
-
-PlayBase.prototype.getConf = function (key, env) {
-  return getConfRegex(key).exec(this.readConfAsString(env))[1];
-};
-
-PlayBase.prototype.setConf = function (key, value, env) {
-  if (this.hasConf(key, value)) {
-    this.writeConfFromString(this.readConfAsString(env).replace( getConfRegex(key), key + "=" + value ), env);
-  } else {
-    this.writeConfFromString(this.readConfAsString(env) + "\n" + key + "=" + value, env);
-  }
-};
+util.inherits(PlayBase, TemplateGenerator.Base);
 
 // Handling Build.scala and plugins.sbt files
 PlayBase.prototype.readBuildAsString = function () {
@@ -328,7 +85,7 @@ PlayBase.prototype.hasDependency = function (packageName, name, version) {
 };
 
 PlayBase.prototype.hasResolver = function (url) {
-  return _.contains( this.readPluginsAsString(), url );
+  return this._.contains( this.readPluginsAsString(), url );
 };
 
 PlayBase.prototype.addResolver = function (url, description) {

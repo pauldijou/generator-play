@@ -126,11 +126,11 @@ module.exports = function (grunt) {
     <% if(_.contains(prompts.cssPreprocessors, "LESS")) { %>
     "less": {
       "options": {
-        "paths": ["<%%= config.dir.bower %>", "<%%= config.dir.resources.less %>"]
+        "paths": ["<%%= config.dir.bower.root %>", "<%%= config.dir.resources.less %>"]
       },
       "raw": {
         "files": {
-          "<%%= config.dir.public.styles %>/<%%= config.play.application.files.style %>.css": "<%%= config.dir.resources.less %>/less/app.less"
+          "<%%= config.dir.public.styles %>/<%%= config.play.application.files.style %>.css": "<%%= config.dir.resources.less %>/<%%= config.play.application.files.style %>.less"
         }
       },
       "dist": {
@@ -138,7 +138,7 @@ module.exports = function (grunt) {
           "compress": true
         },
         "files": [{
-          "<%%= config.dir.public.styles %>/<%%= config.play.application.files.style %>.<%%= config.play.application.version %>.min.css": "<%%= config.dir.resources.less %>/less/app.less"
+          "<%%= config.dir.public.styles %>/<%%= config.play.application.files.style %>.<%%= config.play.application.version %>.min.css": "<%%= config.dir.resources.less %>/<%%= config.play.application.files.style %>.less"
         }]
       }
     },
