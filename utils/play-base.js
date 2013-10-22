@@ -46,7 +46,6 @@ var PlayBase = module.exports =  function PlayBase(args, options) {
   this.log.writeln();
 
   this.on("end", function () {
-    this.writeConfig();
     this.log.write();
     this.log.writeln(" " + yoStyle("yo") + playStyle("play!") + "... it is so good!");
     this.log.write();
