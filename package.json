@@ -1,6 +1,6 @@
 {
   "name": "generator-play",
-  "version": "0.0.1-SNAPSHOT-5",
+  "version": "0.0.1",
   "description": "A Yeoman generator for Play! applications",
   "keywords": [
     "yeoman-generator",
