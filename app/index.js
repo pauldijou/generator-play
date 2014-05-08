@@ -29,8 +29,8 @@ util.inherits(PlayGenerator, PlayBase);
 // Load the instance configuration
 // ----------------------------------------------------------------------------
 
-PlayGenerator.prototype.loadInstance = function () {
-  TemplateGenerator.prototype.loadInstance.call(this, {defaultTemplateName: "new"});
+PlayGenerator.prototype.loadTemplate = function () {
+  TemplateGenerator.prototype.loadTemplate.call(this, {defaultTemplateName: "new"});
 };
 
 // ----------------------------------------------------------------------------
@@ -73,15 +73,12 @@ PlayGenerator.prototype.postWriteFiles = function () {
 // Update project configuration files
 // ----------------------------------------------------------------------------
 
-PlayGenerator.prototype.writeConfFiles = function () {
-  TemplateGenerator.prototype.writeConfFiles.call(this);
-
-  var constantsPath = this.paths.conf + '/constants.json';
-  this.updateJson(constantsPath, 'constants');
+PlayGenerator.prototype.updateConfFiles = function () {
+  TemplateGenerator.prototype.updateConfFiles.call(this);
 };
 
-PlayGenerator.prototype.postWriteConfFiles = function () {
-  TemplateGenerator.prototype.postWriteConfFiles.call(this);
+PlayGenerator.prototype.postUpdateConfFiles = function () {
+  TemplateGenerator.prototype.postUpdateConfFiles.call(this);
 };
 
 // ----------------------------------------------------------------------------

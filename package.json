@@ -24,7 +24,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "generator-template": "0.0.1"
+    "generator-template": "0.0.2"
   },
   "devDependencies": {
     "mocha": "~1.9.0"
